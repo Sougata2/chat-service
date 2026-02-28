@@ -26,6 +26,7 @@ public class WebSocketSecurityConfig {
 
                 // Application SEND messages
                 .simpDestMatchers("/app/**").authenticated()
+                .simpDestMatchers("/user/**").authenticated()
 
                 // Allow subscriptions
                 .simpSubscribeDestMatchers("/topic/**", "/queue/**")
