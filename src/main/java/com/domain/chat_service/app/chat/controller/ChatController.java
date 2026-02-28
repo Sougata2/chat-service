@@ -2,10 +2,12 @@ package com.domain.chat_service.app.chat.controller;
 
 import com.domain.chat_service.app.message.dto.GroupMessage;
 import com.domain.chat_service.app.message.dto.PrivateMessage;
+import com.domain.chat_service.client.message.MessageClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -14,6 +16,7 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class ChatController {
     private final SimpMessagingTemplate template;
+    private final MessageClient messageClient;
 
     @MessageMapping("/send")
     @SendTo("/topic/messages")
@@ -24,6 +27,7 @@ public class ChatController {
     @MessageMapping("/private.send")
     public void sendPrivate(PrivateMessage message, Principal principal) {
         message.setSender(principal.getName());
+        messageClient.saveMessage(getAuthorization(principal), message);
         template.convertAndSendToUser(message.getRecipient(), "/queue/messages", message);
     }
 
@@ -31,5 +35,9 @@ public class ChatController {
     public void sendGroup(GroupMessage message, Principal principal) {
         message.setSender(principal.getName());
         template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), message);
+    }
+
+    private String getAuthorization(Principal principal) {
+        return "Bearer " + ((Authentication) principal).getCredentials().toString();
     }
 }
