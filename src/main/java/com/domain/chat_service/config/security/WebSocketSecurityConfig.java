@@ -15,9 +15,24 @@ public class WebSocketSecurityConfig {
     public AuthorizationManager<Message<?>> authorizationManager(
             MessageMatcherDelegatingAuthorizationManager.Builder messages
     ) {
-        messages.simpTypeMatchers(SimpMessageType.CONNECT).permitAll();
-        messages.simpTypeMatchers(SimpMessageType.SUBSCRIBE).permitAll();
-        messages.anyMessage().permitAll();
+
+        messages
+                // Framework-level messages
+                .simpTypeMatchers(
+                        SimpMessageType.CONNECT,
+                        SimpMessageType.DISCONNECT,
+                        SimpMessageType.HEARTBEAT
+                ).permitAll()
+
+                // Application SEND messages
+                .simpDestMatchers("/app/**").authenticated()
+
+                // Allow subscriptions
+                .simpSubscribeDestMatchers("/topic/**", "/queue/**")
+                .hasAnyRole("CHAT_USER", "ADMIN")
+
+                .anyMessage().denyAll();
+
         return messages.build();
     }
 }
