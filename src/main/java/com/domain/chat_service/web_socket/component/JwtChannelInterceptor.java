@@ -14,7 +14,6 @@ import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,13 +29,6 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                 MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor == null) {
-            return message;
-        }
-
-        // If already authenticated, reuse it
-        if (accessor.getUser() != null) {
-            SecurityContextHolder.getContext()
-                    .setAuthentication((Authentication) accessor.getUser());
             return message;
         }
 
@@ -65,7 +57,6 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
                     );
 
             accessor.setUser(authentication);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
         return message;
