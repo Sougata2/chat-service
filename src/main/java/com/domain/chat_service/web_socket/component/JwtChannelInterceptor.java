@@ -58,7 +58,7 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(
                             username,
-                            null,
+                            token,
                             AuthorityUtils.commaSeparatedStringToAuthorityList(
                                     user.getCurrentRole()
                             )
