@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class PrivateMessage {
-    private String message;
+    private MessageDto message;
     private String recipient;
-    private String sender;
 }

@@ -10,7 +10,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GroupMessage {
-    private String message;
+    private MessageDto message;
     private UUID referenceNumber;
     private String sender;
 }
