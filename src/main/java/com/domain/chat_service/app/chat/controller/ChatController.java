@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -40,10 +39,5 @@ public class ChatController {
     public void sendGroup(GroupMessage message, Principal principal) {
         message.setSender(principal.getName());
         template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), message);
-    }
-
-    private String getAuthorization(Principal principal) {
-        System.out.println(((Authentication) principal).getCredentials());
-        return "Bearer " + ((Authentication) principal).getCredentials().toString();
     }
 }
