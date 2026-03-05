@@ -13,6 +13,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MessageDto {
+    private Long id;
     private String message;
     private UUID uuid;
     private Status status;
