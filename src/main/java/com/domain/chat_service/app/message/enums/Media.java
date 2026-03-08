@@ -2,7 +2,7 @@ package com.domain.chat_service.app.message.enums;
 
 public enum Media {
     AUDIO,
-    FILE,
+    DOCUMENT,
     IMAGE,
     TEXT,
     VIDEO,

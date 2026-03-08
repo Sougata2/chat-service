@@ -5,6 +5,7 @@ import com.domain.chat_service.app.message.enums.Status;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -25,4 +26,5 @@ public class MessageDto {
     private String senderEmail;
     private String senderFirstName;
     private String senderLastName;
+    private List<Long> fileIds;
 }
