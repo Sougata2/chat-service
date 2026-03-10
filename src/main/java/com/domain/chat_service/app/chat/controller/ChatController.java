@@ -3,7 +3,9 @@ package com.domain.chat_service.app.chat.controller;
 import com.domain.chat_service.app.message.dto.GroupMessage;
 import com.domain.chat_service.app.message.dto.MessageDto;
 import com.domain.chat_service.app.message.dto.PrivateMessage;
+import com.domain.chat_service.app.room.dto.RoomDto;
 import com.domain.chat_service.app.user.Auth;
+import com.domain.chat_service.app.user.dto.UserInfo;
 import com.domain.chat_service.app.user.service.UserService;
 import com.domain.chat_service.client.message.MessageClient;
 import lombok.RequiredArgsConstructor;
@@ -35,9 +37,17 @@ public class ChatController {
         template.convertAndSendToUser(principal.getName(), "/queue/messages", sent);
     }
 
+    @MessageMapping("/group.post")
+    public void createGroup(RoomDto room) {
+        for (UserInfo participant : room.getParticipants()) {
+            template.convertAndSendToUser(participant.email(), "/queue/rooms", room);
+        }
+    }
+
     @MessageMapping("/group.send")
     public void sendGroup(GroupMessage message, Principal principal) {
-        message.setSender(principal.getName());
-        template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), message);
+        Auth auth = userService.getAuth(principal.getName());
+        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
+        template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), sent);
     }
 }
