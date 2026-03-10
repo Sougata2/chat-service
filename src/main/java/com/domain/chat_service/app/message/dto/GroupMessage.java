@@ -12,5 +12,4 @@ import java.util.UUID;
 public class GroupMessage {
     private MessageDto message;
     private UUID referenceNumber;
-    private String sender;
 }
