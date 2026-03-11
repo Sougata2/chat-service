@@ -1,5 +1,6 @@
 package com.domain.chat_service.app.room.dto;
 
+import com.domain.chat_service.app.message.dto.MessageDto;
 import com.domain.chat_service.app.room.enums.Type;
 import com.domain.chat_service.app.user.dto.UserInfo;
 import lombok.*;
@@ -21,4 +22,5 @@ public class RoomDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private List<UserInfo> participants;
+    private MessageDto lastMessage;
 }
