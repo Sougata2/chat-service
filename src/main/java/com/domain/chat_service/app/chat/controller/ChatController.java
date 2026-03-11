@@ -40,8 +40,8 @@ public class ChatController {
     @MessageMapping("/group.post")
     public void createGroup(RoomDto room, Principal principal) {
         for (UserInfo participant : room.getParticipants()) {
-            if (!participant.email().equals(principal.getName())){
-                template.convertAndSendToUser(participant.email(), "/queue/rooms", room);
+            if (!participant.getEmail().equals(principal.getName())) {
+                template.convertAndSendToUser(participant.getEmail(), "/queue/rooms", room);
             }
         }
     }

@@ -1,4 +1,15 @@
 package com.domain.chat_service.app.user.dto;
 
-public record UserInfo(Long id, String email, String firstName, String lastName) {
+import lombok.*;
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserInfo {
+    private Long id;
+    private String email;
+    private String firstName;
+    private String lastName;
 }
