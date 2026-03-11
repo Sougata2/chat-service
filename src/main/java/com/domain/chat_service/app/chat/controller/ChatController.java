@@ -38,9 +38,11 @@ public class ChatController {
     }
 
     @MessageMapping("/group.post")
-    public void createGroup(RoomDto room) {
+    public void createGroup(RoomDto room, Principal principal) {
         for (UserInfo participant : room.getParticipants()) {
-            template.convertAndSendToUser(participant.email(), "/queue/rooms", room);
+            if (!participant.email().equals(principal.getName())){
+                template.convertAndSendToUser(participant.email(), "/queue/rooms", room);
+            }
         }
     }
 
