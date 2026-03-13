@@ -1,8 +1,11 @@
 package com.domain.chat_service.app.chat.controller;
 
+import com.domain.chat_service.app.file.dto.FileDto;
 import com.domain.chat_service.app.message.dto.GroupMessage;
 import com.domain.chat_service.app.message.dto.MessageDto;
+import com.domain.chat_service.app.message.dto.OutGoingMessage;
 import com.domain.chat_service.app.message.dto.PrivateMessage;
+import com.domain.chat_service.app.message.enums.Media;
 import com.domain.chat_service.app.room.dto.RoomDto;
 import com.domain.chat_service.app.user.Auth;
 import com.domain.chat_service.app.user.dto.UserInfo;
@@ -15,6 +18,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,8 +37,29 @@ public class ChatController {
     public void sendPrivate(PrivateMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
         MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
-        template.convertAndSendToUser(message.getRecipient(), "/queue/messages", sent);
-        template.convertAndSendToUser(principal.getName(), "/queue/messages", sent);
+        if (sent.getMedia().equals(Media.TEXT)) {
+            OutGoingMessage outGoingMessage = OutGoingMessage.builder()
+                    .message(sent)
+                    .build();
+            template.convertAndSendToUser(message.getRecipient(), "/queue/messages", outGoingMessage);
+            template.convertAndSendToUser(principal.getName(), "/queue/messages", outGoingMessage);
+            return;
+        }
+        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), sent.getUuid());
+        template.convertAndSendToUser(
+                message.getRecipient(), "/queue/messages",
+                OutGoingMessage.builder()
+                        .message(sent)
+                        .files(files)
+                        .build()
+        );
+        template.convertAndSendToUser(
+                principal.getName(), "/queue/messages",
+                OutGoingMessage.builder()
+                        .message(sent)
+                        .files(files)
+                        .build()
+        );
     }
 
     @MessageMapping("/group.post")
@@ -50,6 +75,20 @@ public class ChatController {
     public void sendGroup(GroupMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
         MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
-        template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), sent);
+        if (sent.getMedia().equals(Media.TEXT)) {
+            OutGoingMessage outGoingMessage = OutGoingMessage.builder()
+                    .message(sent)
+                    .build();
+            template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), outGoingMessage);
+            return;
+        }
+        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), sent.getUuid());
+        template.convertAndSend(
+                "/topic/room/%s".formatted(message.getReferenceNumber()),
+                OutGoingMessage.builder()
+                        .message(sent)
+                        .files(files)
+                        .build()
+        );
     }
 }
