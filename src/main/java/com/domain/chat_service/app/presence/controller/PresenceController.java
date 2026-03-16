@@ -1,5 +1,6 @@
 package com.domain.chat_service.app.presence.controller;
 
+import com.domain.chat_service.app.presence.event.dto.PresenceDto;
 import com.domain.chat_service.app.presence.services.PresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ public class PresenceController {
     private final PresenceService service;
 
     @GetMapping("/online-users")
-    public ResponseEntity<List<String>> getOnlineUsers() {
+    public ResponseEntity<List<PresenceDto>> getOnlineUsers() {
         return ResponseEntity.ok(service.getOnlineUsers());
     }
 }

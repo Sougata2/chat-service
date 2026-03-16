@@ -1,5 +1,7 @@
 package com.domain.chat_service.app.presence.services.impl;
 
+import com.domain.chat_service.app.presence.event.dto.PresenceDto;
+import com.domain.chat_service.app.presence.event.enums.Status;
 import com.domain.chat_service.app.presence.services.PresenceService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -54,9 +56,15 @@ public class PresenceServiceImpl implements PresenceService {
     }
 
     @Override
-    public List<String> getOnlineUsers() {
+    public List<PresenceDto> getOnlineUsers() {
         Set<String> onlineUsers = redisTemplate.opsForSet().members(ONLINE_USERS);
         if (onlineUsers == null) return List.of();
-        return onlineUsers.stream().toList();
+        return onlineUsers.stream().map(
+                user ->
+                        PresenceDto.builder()
+                                .username(user)
+                                .status(Status.ONLINE)
+                                .build()
+        ).toList();
     }
 }

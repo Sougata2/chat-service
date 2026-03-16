@@ -1,5 +1,7 @@
 package com.domain.chat_service.app.presence.services;
 
+import com.domain.chat_service.app.presence.event.dto.PresenceDto;
+
 import java.util.List;
 
 public interface PresenceService {
@@ -9,5 +11,5 @@ public interface PresenceService {
 
     boolean isOnline(String username);
 
-    List<String> getOnlineUsers();
+    List<PresenceDto> getOnlineUsers();
 }
