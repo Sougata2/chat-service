@@ -4,6 +4,7 @@ import lombok.*;
 
 @Getter
 @Setter
+@Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
@@ -12,4 +13,5 @@ public class UserInfo {
     private String email;
     private String firstName;
     private String lastName;
+    private Long lastSeen;
 }

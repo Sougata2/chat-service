@@ -43,7 +43,7 @@ public class PresenceListener {
         Principal user = accessor.getUser();
         if (user != null) {
             String username = user.getName();
-            String lastSeen = service.userOffline(accessor.getSessionId());
+            String lastSeen = service.userOffline(accessor.getSessionId(), user);
 
             messagingTemplate.convertAndSend("/topic/presence",
                     PresenceDto.builder()

@@ -3,10 +3,16 @@ package com.domain.chat_service.app.presence.services.impl;
 import com.domain.chat_service.app.presence.event.dto.PresenceDto;
 import com.domain.chat_service.app.presence.event.enums.Status;
 import com.domain.chat_service.app.presence.services.PresenceService;
+import com.domain.chat_service.app.user.Auth;
+import com.domain.chat_service.app.user.dto.UserInfo;
+import com.domain.chat_service.app.user.service.UserService;
+import com.domain.chat_service.client.message.MessageClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.security.Principal;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
@@ -14,6 +20,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class PresenceServiceImpl implements PresenceService {
+    private final MessageClient messageClient;
+    private final UserService userService;
     private final StringRedisTemplate redisTemplate;
     private static final String ONLINE_USERS = "online_users";
     private static final String USER_SESSIONS = "user_sessions";
@@ -30,8 +38,8 @@ public class PresenceServiceImpl implements PresenceService {
     }
 
     @Override
-    public String userOffline(String sessionId) {
-        String lastSeen;
+    public String userOffline(String sessionId, Principal user) {
+        Long lastSeen;
         String username = redisTemplate.opsForValue().get(SOCKET_USER + ":" + sessionId);
 
         if (username == null) return null;
@@ -40,10 +48,11 @@ public class PresenceServiceImpl implements PresenceService {
 
         if (sessions != null && sessions <= 0) {
             redisTemplate.opsForSet().remove(ONLINE_USERS, username);
-            lastSeen = String.valueOf(System.currentTimeMillis());
-            redisTemplate.opsForValue().set(USER_LAST_SEEN + ":" + username, lastSeen);
+            lastSeen = System.currentTimeMillis();
+            updateLastSeenAsync(username, lastSeen);
+            redisTemplate.opsForValue().set(USER_LAST_SEEN + ":" + username, String.valueOf(lastSeen));
             redisTemplate.delete(USER_SESSIONS + ":" + username);
-            return lastSeen;
+            return String.valueOf(lastSeen);
         }
 
         redisTemplate.delete(SOCKET_USER + ":" + sessionId);
@@ -66,5 +75,17 @@ public class PresenceServiceImpl implements PresenceService {
                                 .status(Status.ONLINE)
                                 .build()
         ).toList();
+    }
+
+    @Async
+    @Override
+    public void updateLastSeenAsync(String username, Long lastSeen) {
+        Auth auth = userService.getAuth(username);
+
+        messageClient.updateLastSeen(
+                auth.getUsername(),
+                auth.getRole(),
+                UserInfo.builder().lastSeen(lastSeen).build()
+        );
     }
 }
