@@ -42,16 +42,7 @@ public class PresenceListener {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         Principal user = accessor.getUser();
         if (user != null) {
-            String username = user.getName();
-            String lastSeen = service.userOffline(accessor.getSessionId(), user);
-
-            messagingTemplate.convertAndSend("/topic/presence",
-                    PresenceDto.builder()
-                            .username(username)
-                            .lastSeen(lastSeen)
-                            .status(Status.OFFLINE)
-                            .build()
-            );
+            service.userOffline(accessor.getSessionId(), user);
         }
     }
 

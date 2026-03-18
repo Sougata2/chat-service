@@ -8,7 +8,7 @@ import java.util.List;
 public interface PresenceService {
     void userOnline(String username, String sessionId);
 
-    String userOffline(String sessionId, Principal user);
+    void userOffline(String sessionId, Principal user);
 
     boolean isOnline(String username);
 
