@@ -1,5 +1,6 @@
 package com.domain.chat_service.app.presence.controller;
 
+import com.domain.chat_service.app.presence.enums.Status;
 import com.domain.chat_service.app.presence.event.dto.TypingDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,8 +20,10 @@ public class TypingController {
     @MessageMapping("/chat.typing")
     public void typing(TypingDto dto) {
         String key = "%s:%s:%s".formatted(TYPING, dto.getRoomRef(), dto.getUsername());
-        Boolean exits = redisTemplate.hasKey(key);
-        if (exits) {
+        Boolean exists = redisTemplate.hasKey(key);
+        if (exists && dto.getStatus().equals(Status.STOP)) {
+            redisTemplate.delete(key);
+            messagingTemplate.convertAndSend("/topic/typing/" + dto.getRoomRef(), dto);
             return;
         }
         redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(3));
