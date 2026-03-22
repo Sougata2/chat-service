@@ -33,6 +33,7 @@ public class PresenceServiceImpl implements PresenceService {
     @Override
     public void userOnline(String username, String sessionId) {
         redisTemplate.opsForSet().add(USER_SESSIONS + ":" + username, sessionId);
+        redisTemplate.expire(USER_SESSIONS + ":" + username, Duration.ofHours(1));
         redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, username, Duration.ofHours(1));
 
         Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + username);
@@ -86,6 +87,17 @@ public class PresenceServiceImpl implements PresenceService {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+
+        String key = USER_SESSIONS + ":" + username;
+        Set<String> sessionIds = redisTemplate.opsForSet().members(key);
+        if (sessionIds != null) {
+            for (String sessionId : sessionIds) {
+                Boolean exists = redisTemplate.hasKey(SOCKET_USER + ":" + sessionId);
+                if (!exists) {
+                    redisTemplate.opsForSet().remove(key, sessionId);
+                }
+            }
         }
 
         Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + username);
