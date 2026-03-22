@@ -36,7 +36,7 @@ public class PresenceServiceImpl implements PresenceService {
         redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, username, Duration.ofHours(1));
 
         Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + username);
-        if (size != null && size == 1) {
+        if (size != null && size > 0) {
             redisTemplate.opsForSet().add(ONLINE_USERS, username);
         }
     }
@@ -94,7 +94,7 @@ public class PresenceServiceImpl implements PresenceService {
 
             Long lastSeen = System.currentTimeMillis();
             updateLastSeenAsync(username, lastSeen);
-            redisTemplate.opsForValue().set(USER_LAST_SEEN + ":" + username, String.valueOf(lastSeen));
+            redisTemplate.opsForValue().set(USER_LAST_SEEN + ":" + username, String.valueOf(lastSeen), Duration.ofHours(1));
 
             messagingTemplate.convertAndSend("/topic/presence",
                     PresenceDto.builder()
