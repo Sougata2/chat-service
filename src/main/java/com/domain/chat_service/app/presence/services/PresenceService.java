@@ -15,4 +15,8 @@ public interface PresenceService {
     List<PresenceDto> getOnlineUsers();
 
     void updateLastSeenAsync(String username, Long lastSeen);
+
+    void refreshPresence(Principal principal, String sessionId);
+
+    void handleSessionExpiry(String sessionId);
 }

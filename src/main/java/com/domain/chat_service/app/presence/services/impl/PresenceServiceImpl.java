@@ -29,17 +29,14 @@ public class PresenceServiceImpl implements PresenceService {
     private static final String USER_SESSIONS = "user_sessions";
     private static final String SOCKET_USER = "socket_user";
     private static final String USER_LAST_SEEN = "user_last_seen";
+    private static final String SESSION_USER_BACKUP = "session_user_backup";
 
     @Override
     public void userOnline(String username, String sessionId) {
         redisTemplate.opsForSet().add(USER_SESSIONS + ":" + username, sessionId);
-        redisTemplate.expire(USER_SESSIONS + ":" + username, Duration.ofHours(1));
-        redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, username, Duration.ofHours(1));
-
-        Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + username);
-        if (size != null && size > 0) {
-            redisTemplate.opsForSet().add(ONLINE_USERS, username);
-        }
+        redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, username, Duration.ofMinutes(2));
+        redisTemplate.opsForValue().set(SESSION_USER_BACKUP + ":" + sessionId, username, Duration.ofMinutes(3));
+        redisTemplate.opsForSet().add(ONLINE_USERS, username);
     }
 
     @Override
@@ -60,13 +57,22 @@ public class PresenceServiceImpl implements PresenceService {
     public List<PresenceDto> getOnlineUsers() {
         Set<String> onlineUsers = redisTemplate.opsForSet().members(ONLINE_USERS);
         if (onlineUsers == null) return List.of();
-        return onlineUsers.stream().map(
-                user ->
-                        PresenceDto.builder()
-                                .username(user)
-                                .status(Status.ONLINE)
-                                .build()
-        ).toList();
+        return onlineUsers.stream()
+                .filter(user -> {
+                    Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + user);
+                    if (size == null || size <= 0) {
+                        redisTemplate.opsForSet().remove(ONLINE_USERS, user);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(
+                        user ->
+                                PresenceDto.builder()
+                                        .username(user)
+                                        .status(Status.ONLINE)
+                                        .build()
+                ).toList();
     }
 
     @Async
@@ -79,6 +85,29 @@ public class PresenceServiceImpl implements PresenceService {
                 auth.getRole(),
                 UserInfo.builder().lastSeen(lastSeen).build()
         );
+    }
+
+    @Override
+    public void refreshPresence(Principal principal, String sessionId) {
+        Boolean exist = redisTemplate.hasKey(SOCKET_USER + ":" + sessionId);
+        if (!exist) {
+            redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, principal.getName(), Duration.ofMinutes(2));
+            redisTemplate.opsForValue().set(SESSION_USER_BACKUP + ":" + sessionId, principal.getName(), Duration.ofMinutes(3));
+        } else {
+            redisTemplate.expire(SOCKET_USER + ":" + sessionId, Duration.ofMinutes(2));
+            redisTemplate.expire(SESSION_USER_BACKUP + ":" + sessionId, Duration.ofMinutes(3));
+        }
+        redisTemplate.opsForSet().add(USER_SESSIONS + ":" + principal.getName(), sessionId);
+        redisTemplate.opsForSet().add(ONLINE_USERS, principal.getName());
+    }
+
+    @Override
+    public void handleSessionExpiry(String sessionId) {
+        String username = redisTemplate.opsForValue().get(SESSION_USER_BACKUP + ":" + sessionId);
+        if (username == null) return;
+
+        redisTemplate.opsForSet().remove(USER_SESSIONS + ":" + username, sessionId);
+        delayedOfflineCheck(username);
     }
 
     @Async
