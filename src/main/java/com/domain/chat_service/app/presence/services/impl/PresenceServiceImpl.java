@@ -28,7 +28,6 @@ public class PresenceServiceImpl implements PresenceService {
     private static final String ONLINE_USERS = "online_users";
     private static final String USER_SESSIONS = "user_sessions";
     private static final String SOCKET_USER = "socket_user";
-    private static final String USER_LAST_SEEN = "user_last_seen";
     private static final String SESSION_USER_BACKUP = "session_user_backup";
 
     @Override
@@ -135,7 +134,6 @@ public class PresenceServiceImpl implements PresenceService {
 
             Long lastSeen = System.currentTimeMillis();
             updateLastSeenAsync(username, lastSeen);
-            redisTemplate.opsForValue().set(USER_LAST_SEEN + ":" + username, String.valueOf(lastSeen), Duration.ofHours(1));
 
             messagingTemplate.convertAndSend("/topic/presence",
                     PresenceDto.builder()
