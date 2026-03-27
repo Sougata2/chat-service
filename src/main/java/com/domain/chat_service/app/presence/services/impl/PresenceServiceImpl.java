@@ -107,6 +107,7 @@ public class PresenceServiceImpl implements PresenceService {
 
         redisTemplate.opsForSet().remove(USER_SESSIONS + ":" + username, sessionId);
         delayedOfflineCheck(username);
+        redisTemplate.delete(SESSION_USER_BACKUP + ":" + sessionId);
     }
 
     @Async
