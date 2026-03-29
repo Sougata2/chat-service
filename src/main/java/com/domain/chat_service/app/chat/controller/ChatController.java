@@ -2,7 +2,6 @@ package com.domain.chat_service.app.chat.controller;
 
 import com.domain.chat_service.app.file.dto.FileDto;
 import com.domain.chat_service.app.message.dto.GroupMessage;
-import com.domain.chat_service.app.message.dto.MessageDto;
 import com.domain.chat_service.app.message.dto.OutGoingMessage;
 import com.domain.chat_service.app.message.dto.PrivateMessage;
 import com.domain.chat_service.app.message.enums.Media;
@@ -36,27 +35,19 @@ public class ChatController {
     @MessageMapping("/private.send")
     public void sendPrivate(PrivateMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
-        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
-        if (sent.getMedia().equals(Media.TEXT)) {
+//        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
+        if (message.getMessage().getMedia().equals(Media.TEXT)) {
             OutGoingMessage outGoingMessage = OutGoingMessage.builder()
-                    .message(sent)
+                    .message(message.getMessage())
                     .build();
             template.convertAndSendToUser(message.getRecipient(), "/queue/messages", outGoingMessage);
-            template.convertAndSendToUser(principal.getName(), "/queue/messages", outGoingMessage);
             return;
         }
-        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), sent.getUuid());
+        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), message.getMessage().getUuid());
         template.convertAndSendToUser(
                 message.getRecipient(), "/queue/messages",
                 OutGoingMessage.builder()
-                        .message(sent)
-                        .files(files)
-                        .build()
-        );
-        template.convertAndSendToUser(
-                principal.getName(), "/queue/messages",
-                OutGoingMessage.builder()
-                        .message(sent)
+                        .message(message.getMessage())
                         .files(files)
                         .build()
         );
@@ -74,19 +65,19 @@ public class ChatController {
     @MessageMapping("/group.send")
     public void sendGroup(GroupMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
-        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
-        if (sent.getMedia().equals(Media.TEXT)) {
+//        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
+        if (message.getMessage().getMedia().equals(Media.TEXT)) {
             OutGoingMessage outGoingMessage = OutGoingMessage.builder()
-                    .message(sent)
+                    .message(message.getMessage())
                     .build();
             template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), outGoingMessage);
             return;
         }
-        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), sent.getUuid());
+        List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), message.getMessage().getUuid());
         template.convertAndSend(
                 "/topic/room/%s".formatted(message.getReferenceNumber()),
                 OutGoingMessage.builder()
-                        .message(sent)
+                        .message(message.getMessage())
                         .files(files)
                         .build()
         );
