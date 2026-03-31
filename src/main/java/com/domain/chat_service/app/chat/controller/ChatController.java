@@ -1,6 +1,7 @@
 package com.domain.chat_service.app.chat.controller;
 
 import com.domain.chat_service.app.file.dto.FileDto;
+import com.domain.chat_service.app.message.dto.AcknowledgementDto;
 import com.domain.chat_service.app.message.dto.GroupMessage;
 import com.domain.chat_service.app.message.dto.OutGoingMessage;
 import com.domain.chat_service.app.message.dto.PrivateMessage;
@@ -81,5 +82,12 @@ public class ChatController {
                         .files(files)
                         .build()
         );
+    }
+
+    @MessageMapping("/post.acknowledge")
+    public void acknowledge(AcknowledgementDto dto, Principal principal) {
+        Auth auth = userService.getAuth(principal.getName());
+        messageClient.acknowledge(auth.getUsername(), auth.getRole(), dto);
+
     }
 }
