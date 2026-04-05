@@ -8,6 +8,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @FeignClient(name = "message-service")
@@ -22,5 +23,5 @@ public interface MessageClient {
     void updateLastSeen(@RequestHeader("X-Username") String username, @RequestHeader("X-Role") String role, @RequestBody UserInfo userInfo);
 
     @PostMapping("/messages/acknowledge")
-    void acknowledge(@RequestHeader("X-Username") String username, @RequestHeader("X-Role") String role, @RequestBody AcknowledgementDto dto);
+    Map<String, List<MessageDto>> acknowledge(@RequestHeader("X-Username") String username, @RequestHeader("X-Role") String role, @RequestBody AcknowledgementDto dto);
 }

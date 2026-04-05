@@ -1,10 +1,7 @@
 package com.domain.chat_service.app.chat.controller;
 
 import com.domain.chat_service.app.file.dto.FileDto;
-import com.domain.chat_service.app.message.dto.AcknowledgementDto;
-import com.domain.chat_service.app.message.dto.GroupMessage;
-import com.domain.chat_service.app.message.dto.OutGoingMessage;
-import com.domain.chat_service.app.message.dto.PrivateMessage;
+import com.domain.chat_service.app.message.dto.*;
 import com.domain.chat_service.app.message.enums.Media;
 import com.domain.chat_service.app.room.dto.RoomDto;
 import com.domain.chat_service.app.user.Auth;
@@ -19,6 +16,7 @@ import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -87,7 +85,9 @@ public class ChatController {
     @MessageMapping("/post.acknowledge")
     public void acknowledge(AcknowledgementDto dto, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
-        messageClient.acknowledge(auth.getUsername(), auth.getRole(), dto);
-
+        Map<String, List<MessageDto>> acknowledgedMessage = messageClient.acknowledge(auth.getUsername(), auth.getRole(), dto);
+        acknowledgedMessage.forEach((sender, msgList) -> {
+            template.convertAndSendToUser(sender, "/queue/acknowledge", msgList);
+        });
     }
 }

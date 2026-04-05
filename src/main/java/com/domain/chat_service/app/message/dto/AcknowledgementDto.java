@@ -13,7 +13,6 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AcknowledgementDto {
-    private Map<UUID, List<UUID>> messageMap;
+    private Map<UUID, List<AcknowledgeableMessage>> roomMessageMap;
     private Map<UUID, Status> statusMap;
-    private Map<UUID, String> senderMap;
 }
