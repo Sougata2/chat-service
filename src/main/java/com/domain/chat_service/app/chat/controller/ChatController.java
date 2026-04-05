@@ -86,8 +86,8 @@ public class ChatController {
     public void acknowledge(AcknowledgementDto dto, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
         Map<String, List<MessageDto>> acknowledgedMessage = messageClient.acknowledge(auth.getUsername(), auth.getRole(), dto);
-        acknowledgedMessage.forEach((sender, msgList) -> {
-            template.convertAndSendToUser(sender, "/queue/acknowledge", msgList);
-        });
+        acknowledgedMessage.forEach((sender, msgList) ->
+                template.convertAndSendToUser(sender, "/queue/acknowledge", msgList)
+        );
     }
 }
