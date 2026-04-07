@@ -2,6 +2,7 @@ package com.domain.chat_service.app.message.dto;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Getter
@@ -13,4 +14,5 @@ public class AcknowledgeableMessage {
     private Long id;
     private UUID uuid;
     private String senderEmail;
+    private LocalDateTime createdAt;
 }
