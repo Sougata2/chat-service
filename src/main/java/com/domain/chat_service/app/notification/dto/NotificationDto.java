@@ -1,4 +1,4 @@
-package com.domain.chat_service.app.dto;
+package com.domain.chat_service.app.notification.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
