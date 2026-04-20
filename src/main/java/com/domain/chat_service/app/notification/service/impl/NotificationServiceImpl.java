@@ -27,7 +27,6 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendNotification(MessageDto dto, Principal principal) {
         Auth auth = userService.getAuth(dto.getSenderEmail());
-        System.out.println(principal.getName());
         RoomDto room = messageClient.getRoomInfo(auth.getUsername(), auth.getRole(), dto.getRoomRef());
 
         List<String> emails = room.getParticipants().stream()

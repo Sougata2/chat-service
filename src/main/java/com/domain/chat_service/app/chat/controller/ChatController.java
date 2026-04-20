@@ -36,7 +36,6 @@ public class ChatController {
     @MessageMapping("/private.send")
     public void sendPrivate(PrivateMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
-        System.out.println(principal.getName());
 //        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
         if (message.getMessage().getMedia().equals(Media.TEXT)) {
             OutGoingMessage outGoingMessage = OutGoingMessage.builder()
