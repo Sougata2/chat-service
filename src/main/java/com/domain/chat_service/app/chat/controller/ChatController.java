@@ -3,6 +3,7 @@ package com.domain.chat_service.app.chat.controller;
 import com.domain.chat_service.app.file.dto.FileDto;
 import com.domain.chat_service.app.message.dto.*;
 import com.domain.chat_service.app.message.enums.Media;
+import com.domain.chat_service.app.notification.service.NotificationService;
 import com.domain.chat_service.app.room.dto.RoomDto;
 import com.domain.chat_service.app.user.Auth;
 import com.domain.chat_service.app.user.dto.UserInfo;
@@ -21,6 +22,7 @@ import java.util.Map;
 @Controller
 @RequiredArgsConstructor
 public class ChatController {
+    private final NotificationService notificationService;
     private final SimpMessagingTemplate template;
     private final MessageClient messageClient;
     private final UserService userService;
@@ -34,12 +36,14 @@ public class ChatController {
     @MessageMapping("/private.send")
     public void sendPrivate(PrivateMessage message, Principal principal) {
         Auth auth = userService.getAuth(principal.getName());
+        System.out.println(principal.getName());
 //        MessageDto sent = messageClient.saveMessage(auth.getUsername(), auth.getRole(), message.getMessage());
         if (message.getMessage().getMedia().equals(Media.TEXT)) {
             OutGoingMessage outGoingMessage = OutGoingMessage.builder()
                     .message(message.getMessage())
                     .build();
             template.convertAndSendToUser(message.getRecipient(), "/queue/messages", outGoingMessage);
+            notificationService.sendNotification(message.getMessage(), principal);
             return;
         }
         List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), message.getMessage().getUuid());
@@ -50,6 +54,7 @@ public class ChatController {
                         .files(files)
                         .build()
         );
+        notificationService.sendNotification(message.getMessage(), principal);
     }
 
     @MessageMapping("/group.post")
@@ -70,6 +75,7 @@ public class ChatController {
                     .message(message.getMessage())
                     .build();
             template.convertAndSend("/topic/room/%s".formatted(message.getReferenceNumber()), outGoingMessage);
+            notificationService.sendNotification(message.getMessage(), principal);
             return;
         }
         List<FileDto> files = messageClient.findByMessage(auth.getUsername(), auth.getRole(), message.getMessage().getUuid());
@@ -80,6 +86,7 @@ public class ChatController {
                         .files(files)
                         .build()
         );
+        notificationService.sendNotification(message.getMessage(), principal);
     }
 
     @MessageMapping("/post.acknowledge")
