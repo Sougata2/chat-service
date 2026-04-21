@@ -29,6 +29,7 @@ public class PresenceServiceImpl implements PresenceService {
     private static final String USER_SESSIONS = "user_sessions";
     private static final String SOCKET_USER = "socket_user";
     private static final String SESSION_USER_BACKUP = "session_user_backup";
+    private static final String ACTIVE_USER = "active_user";
 
     @Override
     public void userOnline(String username, String sessionId) {
@@ -36,6 +37,7 @@ public class PresenceServiceImpl implements PresenceService {
         redisTemplate.opsForValue().set(SOCKET_USER + ":" + sessionId, username, Duration.ofMinutes(2));
         redisTemplate.opsForValue().set(SESSION_USER_BACKUP + ":" + sessionId, username, Duration.ofMinutes(3));
         redisTemplate.opsForSet().add(ONLINE_USERS, username);
+        registerActiveUser(username);
     }
 
     @Override
@@ -110,6 +112,15 @@ public class PresenceServiceImpl implements PresenceService {
         redisTemplate.delete(SESSION_USER_BACKUP + ":" + sessionId);
     }
 
+    @Override
+    public void registerActiveUser(String username) {
+        if (!redisTemplate.hasKey(ACTIVE_USER + ":" + username)) {
+            redisTemplate.opsForValue().set(ACTIVE_USER + ":" + username, "1", Duration.ofSeconds(30));
+        } else {
+            redisTemplate.expire(ACTIVE_USER + ":" + username, Duration.ofSeconds(30));
+        }
+    }
+
     @Async
     public void delayedOfflineCheck(String username) {
         try {
@@ -132,6 +143,7 @@ public class PresenceServiceImpl implements PresenceService {
         Long size = redisTemplate.opsForSet().size(USER_SESSIONS + ":" + username);
         if (size == null || size == 0) {
             redisTemplate.opsForSet().remove(ONLINE_USERS, username);
+            redisTemplate.delete(ACTIVE_USER + ":" + username);
 
             Long lastSeen = System.currentTimeMillis();
             updateLastSeenAsync(username, lastSeen);

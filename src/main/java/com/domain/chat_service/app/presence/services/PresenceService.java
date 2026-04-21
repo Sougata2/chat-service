@@ -19,4 +19,6 @@ public interface PresenceService {
     void refreshPresence(Principal principal, String sessionId);
 
     void handleSessionExpiry(String sessionId);
+
+    void registerActiveUser(String username);
 }

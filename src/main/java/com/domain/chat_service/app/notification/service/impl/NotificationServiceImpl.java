@@ -12,6 +12,7 @@ import com.domain.chat_service.app.user.service.UserService;
 import com.domain.chat_service.client.message.MessageClient;
 import com.domain.chat_service.client.notification.NotificationClient;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.security.Principal;
@@ -20,7 +21,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
+    private static final String ACTIVE_USER = "active_user";
     private final NotificationClient notificationClient;
+    private final StringRedisTemplate redisTemplate;
     private final MessageClient messageClient;
     private final UserService userService;
 
@@ -32,13 +35,14 @@ public class NotificationServiceImpl implements NotificationService {
         List<String> emails = room.getParticipants().stream()
                 .map(UserInfo::getEmail)
                 .filter(email -> !email.equals(principal.getName()))
+                .filter(email -> !redisTemplate.hasKey(ACTIVE_USER + ":" + email))
                 .toList();
 
         String title = room.getType() == Type.GROUP ?
                 room.getName() :
                 "%s %s".formatted(dto.getSenderFirstName(), dto.getSenderLastName());
 
-        String bodyPrefix = room.getType() == Type.GROUP ? dto.getSenderFirstName() + ":" : "";
+        String bodyPrefix = room.getType() == Type.GROUP ? dto.getSenderFirstName() + ": " : "";
         String body = getBody(dto);
         NotificationDto notificationDto = NotificationDto.builder()
                 .title(title)
